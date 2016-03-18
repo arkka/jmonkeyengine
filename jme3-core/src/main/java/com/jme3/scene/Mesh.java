@@ -354,91 +354,93 @@ public class Mesh implements Savable, Cloneable {
 
     /**
      * Prepares the mesh for software skinning by converting the bone index
-     * and weight buffers to heap buffers. 
-     * 
-     * @param forSoftwareAnim Should be true to enable the conversion.
+     * and weight buffers to heap buffers.
      */
-    public void prepareForAnim(boolean forSoftwareAnim){
-        if (forSoftwareAnim) {
-            // convert indices to ubytes on the heap		
-            VertexBuffer indices = getBuffer(Type.BoneIndex);		
-            if (!indices.getData().hasArray()) {		
-                ByteBuffer originalIndex = (ByteBuffer) indices.getData();		
-                ByteBuffer arrayIndex = ByteBuffer.allocate(originalIndex.capacity());		
-                originalIndex.clear();		
-                arrayIndex.put(originalIndex);		
-                indices.updateData(arrayIndex);		
-            }		
-            indices.setUsage(Usage.CpuOnly);		
+    public void prepareForAnimSoftware(){
+        // convert indices to ubytes on the heap
+        VertexBuffer indices = getBuffer(Type.BoneIndex);
+        if (!indices.getData().hasArray()) {
+            ByteBuffer originalIndex = (ByteBuffer) indices.getData();
+            ByteBuffer arrayIndex = ByteBuffer.allocate(originalIndex.capacity());
+            originalIndex.clear();
+            arrayIndex.put(originalIndex);
+            indices.updateData(arrayIndex);
+        }
+        indices.setUsage(Usage.CpuOnly);
 
-            // convert weights on the heap		
-            VertexBuffer weights = getBuffer(Type.BoneWeight);		
-            if (!weights.getData().hasArray()) {		
-                FloatBuffer originalWeight = (FloatBuffer) weights.getData();		
-                FloatBuffer arrayWeight = FloatBuffer.allocate(originalWeight.capacity());		
-                originalWeight.clear();		
-                arrayWeight.put(originalWeight);		
-                weights.updateData(arrayWeight);		
-            }		
-            weights.setUsage(Usage.CpuOnly);
-            // position, normal, and tanget buffers to be in "Stream" mode
-            VertexBuffer positions = getBuffer(Type.Position);
-            VertexBuffer normals = getBuffer(Type.Normal);
-            VertexBuffer tangents = getBuffer(Type.Tangent);
-            positions.setUsage(Usage.Stream);
-            if (normals != null) {
-                normals.setUsage(Usage.Stream);
-            }
-            if (tangents != null) {
-                tangents.setUsage(Usage.Stream);
-            }
-        } else {
-            //if HWBoneIndex and HWBoneWeight are empty, we setup them as direct
-            //buffers with software anim buffers data 
-            VertexBuffer indicesHW = getBuffer(Type.HWBoneIndex);
-            if (indicesHW.getData() == null) {
-                VertexBuffer indices = getBuffer(Type.BoneIndex);
-                ByteBuffer originalIndex = (ByteBuffer) indices.getData();
-                ByteBuffer directIndex = BufferUtils.createByteBuffer(originalIndex.capacity());
-                originalIndex.clear();
-                directIndex.put(originalIndex);
-                indicesHW.setupData(Usage.Static, indices.getNumComponents(), indices.getFormat(), directIndex);
-            }
-            
-            VertexBuffer weightsHW = getBuffer(Type.HWBoneWeight);
-            if (weightsHW.getData() == null) {
-                VertexBuffer weights = getBuffer(Type.BoneWeight);
-                FloatBuffer originalWeight = (FloatBuffer) weights.getData();
-                FloatBuffer directWeight = BufferUtils.createFloatBuffer(originalWeight.capacity());
-                originalWeight.clear();
-                directWeight.put(originalWeight);
-                weightsHW.setupData(Usage.Static, weights.getNumComponents(), weights.getFormat(), directWeight);
-            }
-            
-            // position, normal, and tanget buffers to be in "Static" mode
-            VertexBuffer positions = getBuffer(Type.Position);
-            VertexBuffer normals = getBuffer(Type.Normal);
-            VertexBuffer tangents = getBuffer(Type.Tangent);
-            
-            VertexBuffer positionsBP = getBuffer(Type.BindPosePosition);
-            VertexBuffer normalsBP = getBuffer(Type.BindPoseNormal);
-            VertexBuffer tangentsBP = getBuffer(Type.BindPoseTangent);
-            
-            positions.setUsage(Usage.Static);
-            positionsBP.copyElements(0, positions, 0, positionsBP.getNumElements());
-            positions.setUpdateNeeded();
-            
-            if (normals != null) {
-                normals.setUsage(Usage.Static);
-                normalsBP.copyElements(0, normals, 0, normalsBP.getNumElements());
-                normals.setUpdateNeeded();
-            }
-            
-            if (tangents != null) {
-                tangents.setUsage(Usage.Static);
-                tangentsBP.copyElements(0, tangents, 0, tangentsBP.getNumElements());
-                tangents.setUpdateNeeded();
-            }
+        // convert weights on the heap
+        VertexBuffer weights = getBuffer(Type.BoneWeight);
+        if (!weights.getData().hasArray()) {
+            FloatBuffer originalWeight = (FloatBuffer) weights.getData();
+            FloatBuffer arrayWeight = FloatBuffer.allocate(originalWeight.capacity());
+            originalWeight.clear();
+            arrayWeight.put(originalWeight);
+            weights.updateData(arrayWeight);
+        }
+        weights.setUsage(Usage.CpuOnly);
+        // position, normal, and tanget buffers to be in "Stream" mode
+        VertexBuffer positions = getBuffer(Type.Position);
+        VertexBuffer normals = getBuffer(Type.Normal);
+        VertexBuffer tangents = getBuffer(Type.Tangent);
+        positions.setUsage(Usage.Stream);
+        if (normals != null) {
+            normals.setUsage(Usage.Stream);
+        }
+        if (tangents != null) {
+            tangents.setUsage(Usage.Stream);
+        }
+    }
+
+    /**
+     * Prepares the mesh for hardware skinning by converting the bone index
+     * and weight buffers to heap buffers.
+     */
+    public void prepareForAnimHardware(){
+        //if HWBoneIndex and HWBoneWeight are empty, we setup them as direct
+        //buffers with software anim buffers data
+        VertexBuffer indicesHW = getBuffer(Type.HWBoneIndex);
+        if (indicesHW.getData() == null) {
+            VertexBuffer indices = getBuffer(Type.BoneIndex);
+            ByteBuffer originalIndex = (ByteBuffer) indices.getData();
+            ByteBuffer directIndex = BufferUtils.createByteBuffer(originalIndex.capacity());
+            originalIndex.clear();
+            directIndex.put(originalIndex);
+            indicesHW.setupData(Usage.Static, indices.getNumComponents(), indices.getFormat(), directIndex);
+        }
+
+        VertexBuffer weightsHW = getBuffer(Type.HWBoneWeight);
+        if (weightsHW.getData() == null) {
+            VertexBuffer weights = getBuffer(Type.BoneWeight);
+            FloatBuffer originalWeight = (FloatBuffer) weights.getData();
+            FloatBuffer directWeight = BufferUtils.createFloatBuffer(originalWeight.capacity());
+            originalWeight.clear();
+            directWeight.put(originalWeight);
+            weightsHW.setupData(Usage.Static, weights.getNumComponents(), weights.getFormat(), directWeight);
+        }
+
+        // position, normal, and tanget buffers to be in "Static" mode
+        VertexBuffer positions = getBuffer(Type.Position);
+        VertexBuffer normals = getBuffer(Type.Normal);
+        VertexBuffer tangents = getBuffer(Type.Tangent);
+
+        VertexBuffer positionsBP = getBuffer(Type.BindPosePosition);
+        VertexBuffer normalsBP = getBuffer(Type.BindPoseNormal);
+        VertexBuffer tangentsBP = getBuffer(Type.BindPoseTangent);
+
+        positions.setUsage(Usage.Static);
+        positionsBP.copyElements(0, positions, 0, positionsBP.getNumElements());
+        positions.setUpdateNeeded();
+
+        if (normals != null) {
+            normals.setUsage(Usage.Static);
+            normalsBP.copyElements(0, normals, 0, normalsBP.getNumElements());
+            normals.setUpdateNeeded();
+        }
+
+        if (tangents != null) {
+            tangents.setUsage(Usage.Static);
+            tangentsBP.copyElements(0, tangents, 0, tangentsBP.getNumElements());
+            tangents.setUpdateNeeded();
         }
     }
 

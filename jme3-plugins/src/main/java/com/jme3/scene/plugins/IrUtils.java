@@ -391,7 +391,7 @@ public final class IrUtils {
         
         if (boneIndices != null) {
             jmeMesh.setMaxNumWeights(maxBonesPerVertex);
-            jmeMesh.prepareForAnim(true);
+            jmeMesh.prepareForAnimSoftware();
             jmeMesh.generateBindPose(true);
         }
         
