@@ -1156,11 +1156,10 @@ public class Mesh implements Savable, Cloneable {
         // convert from int index buffer to short index buffer
 
         int numIndices = indexBuf.size();
-        int numVerts = indices.size();
-        int newIndex = indices.size();
+        int numIndex = indices.size();
 
         IndexBuffer newIndexBuf;
-        if (numVerts >= 65536) {
+        if (numIndex >= 65536) {
             newIndexBuf = new IndexIntBuffer(BufferUtils.createIntBuffer(numIndices));
         } else {
             newIndexBuf = new IndexShortBuffer(BufferUtils.createShortBuffer(numIndices));
@@ -1169,9 +1168,9 @@ public class Mesh implements Savable, Cloneable {
         for (int i = 0; i < numIndices; i++) {
             // Map the old indices to the new indices
             int oldIndex = indexBuf.get(i);
-            newIndex = indices.get(oldIndex);
+            numIndex = indices.get(oldIndex);
 
-            newIndexBuf.put(i, newIndex);
+            newIndexBuf.put(i, numIndex);
         }
 
         VertexBuffer newIdxBuf = new VertexBuffer(Type.Index);
@@ -1179,6 +1178,8 @@ public class Mesh implements Savable, Cloneable {
                 vertexBuf.getNumComponents(),
                 newIndexBuf instanceof IndexIntBuffer ? Format.UnsignedInt : Format.UnsignedShort,
                 newIndexBuf.getBuffer());
+
+        return newIdxBuf;
     }
     
     /**
