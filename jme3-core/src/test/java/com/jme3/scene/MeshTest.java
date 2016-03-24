@@ -2,11 +2,11 @@ package com.jme3.scene;
 
 import com.jme3.scene.shape.Box;
 import org.junit.Test;
+
 /**
  * Created by arkkadhiratara on 3/22/16.
  */
 public class MeshTest {
-
     @Test
     public void extractVertexDataTest() {
         Box m = new Box(10,10,10);
