@@ -673,9 +673,6 @@ public class Mesh implements Savable, Cloneable {
      * based on the current data. This method should be called
      * after the {@link Buffer#capacity() capacities} of the mesh's
      * {@link VertexBuffer vertex buffers} has been altered.
-     * 
-     * @throws IllegalStateException If this mesh is in 
-     * {@link #setInterleaved() interleaved} format.
      */
     public void updateCounts(){
         if (getBuffer(Type.InterleavedData) != null)
@@ -1104,7 +1101,7 @@ public class Mesh implements Savable, Cloneable {
             throw new AssertionError();
         }
 
-        VertexBuffer newIdxBuf = createVertexBuffer(oldIdxBuf, indexBuf, newIndicesToOldIndices);
+        VertexBuffer newIdxBuf = createIndexBuffer(oldIdxBuf, indexBuf, newIndicesToOldIndices);
         clearBuffer(Type.Index);
         setBuffer(newIdxBuf);
 
@@ -1116,26 +1113,7 @@ public class Mesh implements Savable, Cloneable {
                 continue;
             }
 
-            VertexBuffer newVb = new VertexBuffer(oldVb.getBufferType());
-            newVb.setNormalized(oldVb.isNormalized());
-            //check for data before copying, some buffers are just empty shells 
-            //for caching purpose (HW skinning buffers), and will be filled when
-            //needed
-            if(oldVb.getData()!=null){
-                // Create a new vertex buffer with similar configuration, but
-                // with the capacity of number of unique vertices
-                Buffer buffer = VertexBuffer.createBuffer(oldVb.getFormat(), oldVb.getNumComponents(), newNumVerts);
-                newVb.setupData(oldVb.getUsage(), oldVb.getNumComponents(), oldVb.getFormat(), buffer);
-
-                // Copy the vertex data from the old buffer into the new buffer
-                for (int i = 0; i < newNumVerts; i++) {
-                    int oldIndex = newIndicesToOldIndices.get(i);
-
-                    // Copy the vertex attribute from the old index
-                    // to the new index
-                    oldVb.copyElement(oldIndex, newVb, i);
-                }
-            }
+            VertexBuffer newVb = createVertexBuffer(oldVb,newIndicesToOldIndices);
             
             // Set the buffer on the mesh
             clearBuffer(newVb.getBufferType());
@@ -1150,7 +1128,7 @@ public class Mesh implements Savable, Cloneable {
         updateBound();
     }
 
-    public VertexBuffer createVertexBuffer(VertexBuffer vertexBuf, IndexBuffer indexBuf, ArrayList<Integer> indices){
+    public VertexBuffer createIndexBuffer(VertexBuffer vertexBuf, IndexBuffer indexBuf, ArrayList<Integer> indices){
         // Create the new index buffer.
         // Do not overwrite the old one because we might be able to
         // convert from int index buffer to short index buffer
@@ -1180,6 +1158,30 @@ public class Mesh implements Savable, Cloneable {
                 newIndexBuf.getBuffer());
 
         return newIdxBuf;
+    }
+
+    public VertexBuffer createVertexBuffer(VertexBuffer oldVb, ArrayList<Integer> indices) {
+        VertexBuffer newVb = new VertexBuffer(oldVb.getBufferType());
+        newVb.setNormalized(oldVb.isNormalized());
+        //check for data before copying, some buffers are just empty shells
+        //for caching purpose (HW skinning buffers), and will be filled when
+        //needed
+        if(oldVb.getData()!=null){
+            // Create a new vertex buffer with similar configuration, but
+            // with the capacity of number of unique vertices
+            Buffer buffer = VertexBuffer.createBuffer(oldVb.getFormat(), oldVb.getNumComponents(), indices.size());
+            newVb.setupData(oldVb.getUsage(), oldVb.getNumComponents(), oldVb.getFormat(), buffer);
+
+            // Copy the vertex data from the old buffer into the new buffer
+            for (int i = 0; i < indices.size(); i++) {
+                int oldIndex = indices.get(i);
+
+                // Copy the vertex attribute from the old index
+                // to the new index
+                oldVb.copyElement(oldIndex, newVb, i);
+            }
+        }
+        return newVb;
     }
     
     /**
