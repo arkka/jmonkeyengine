@@ -1104,29 +1104,7 @@ public class Mesh implements Savable, Cloneable {
             throw new AssertionError();
         }
 
-        // Create the new index buffer. 
-        // Do not overwrite the old one because we might be able to 
-        // convert from int index buffer to short index buffer
-        IndexBuffer newIndexBuf;
-        if (newNumVerts >= 65536) {
-            newIndexBuf = new IndexIntBuffer(BufferUtils.createIntBuffer(numIndices));
-        } else {
-            newIndexBuf = new IndexShortBuffer(BufferUtils.createShortBuffer(numIndices));
-        }
-
-        for (int i = 0; i < numIndices; i++) {
-            // Map the old indices to the new indices
-            int oldIndex = indexBuf.get(i);
-            newIndex = oldIndicesToNewIndices.get(oldIndex);
-
-            newIndexBuf.put(i, newIndex);
-        }
-        
-        VertexBuffer newIdxBuf = new VertexBuffer(Type.Index);
-        newIdxBuf.setupData(oldIdxBuf.getUsage(), 
-                            oldIdxBuf.getNumComponents(), 
-                            newIndexBuf instanceof IndexIntBuffer ? Format.UnsignedInt : Format.UnsignedShort,
-                            newIndexBuf.getBuffer());
+        VertexBuffer newIdxBuf = createVertexBuffer(oldIdxBuf, indexBuf, newIndicesToOldIndices);
         clearBuffer(Type.Index);
         setBuffer(newIdxBuf);
 
@@ -1170,6 +1148,37 @@ public class Mesh implements Savable, Cloneable {
         // The data has been copied over, update informations
         updateCounts();
         updateBound();
+    }
+
+    public VertexBuffer createVertexBuffer(VertexBuffer vertexBuf, IndexBuffer indexBuf, ArrayList<Integer> indices){
+        // Create the new index buffer.
+        // Do not overwrite the old one because we might be able to
+        // convert from int index buffer to short index buffer
+
+        int numIndices = indexBuf.size();
+        int numVerts = indices.size();
+        int newIndex = indices.size();
+
+        IndexBuffer newIndexBuf;
+        if (numVerts >= 65536) {
+            newIndexBuf = new IndexIntBuffer(BufferUtils.createIntBuffer(numIndices));
+        } else {
+            newIndexBuf = new IndexShortBuffer(BufferUtils.createShortBuffer(numIndices));
+        }
+
+        for (int i = 0; i < numIndices; i++) {
+            // Map the old indices to the new indices
+            int oldIndex = indexBuf.get(i);
+            newIndex = indices.get(oldIndex);
+
+            newIndexBuf.put(i, newIndex);
+        }
+
+        VertexBuffer newIdxBuf = new VertexBuffer(Type.Index);
+        newIdxBuf.setupData(vertexBuf.getUsage(),
+                vertexBuf.getNumComponents(),
+                newIndexBuf instanceof IndexIntBuffer ? Format.UnsignedInt : Format.UnsignedShort,
+                newIndexBuf.getBuffer());
     }
     
     /**
