@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
+
 /**
  * <code>Spatial</code> defines the base class for scene graph nodes. It
  * maintains a link to a parent, it's local transforms and the world's
@@ -266,8 +267,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
         refreshFlags |= RF_TRANSFORM;
         setBoundRefresh();
     }
-
-    protected void setLightListRefresh() {
+	public void setLightListRefresh() {
         refreshFlags |= RF_LIGHTLIST;
         
         // Make sure next updateGeometricState() visits this branch
@@ -297,6 +297,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
             p = p.parent;
         }
     }
+    
 
     /**
      * Indicate that the bounding of this spatial has changed and that
@@ -331,6 +332,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
             setBoundRefresh();
         }
         if (lights) {
+        	
             setLightListRefresh();
         }
     }
@@ -398,28 +400,8 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
         return name;
     }
 
-    /**
-     * Returns the local {@link LightList}, which are the lights
-     * that were directly attached to this <code>Spatial</code> through the
-     * {@link #addLight(com.jme3.light.Light) } and 
-     * {@link #removeLight(com.jme3.light.Light) } methods.
-     * 
-     * @return The local light list
-     */
-    public LightList getLocalLightList() {
-        return localLights;
-    }
 
-    /**
-     * Returns the world {@link LightList}, containing the lights
-     * combined from all this <code>Spatial's</code> parents up to and including
-     * this <code>Spatial</code>'s lights.
-     * 
-     * @return The combined world light list
-     */
-    public LightList getWorldLightList() {
-        return worldLights;
-    }
+
 
     /**
      * <code>getWorldRotation</code> retrieves the absolute rotation of the
@@ -546,7 +528,6 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
         // -> handled by subclass
         refreshFlags &= ~RF_BOUND;
     }
-
     protected void updateWorldLightList() {
         if (parent == null) {
             worldLights.update(localLights, null);
@@ -560,6 +541,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
             }
         }
     }
+
 
     /**
      * Should only be called from updateGeometricState().
@@ -1053,28 +1035,9 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
     public void setMaterial(Material material) {
     }
 
-    /**
-     * <code>addLight</code> adds the given light to the Spatial; causing
- all
-     * child Spatials to be affected by it.
-     *
-     * @param light The light to add.
-     */
-    public void addLight(Light light) {
-        localLights.add(light);
-        setLightListRefresh();
-    }
 
-    /**
-     * <code>removeLight</code> removes the given light from the Spatial.
-     * 
-     * @param light The light to remove.
-     * @see Spatial#addLight(com.jme3.light.Light) 
-     */
-    public void removeLight(Light light) {
-        localLights.remove(light);
-        setLightListRefresh();
-    }
+
+
 
     /**
      * Translates the spatial by the given translation vector.
@@ -1634,3 +1597,4 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
 
     protected abstract void breadthFirstTraversal(SceneGraphVisitor visitor, Queue<Spatial> queue);
 }
+
